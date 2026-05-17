@@ -28,7 +28,8 @@ namespace Systems.Inventory
         private IEnumerator Start()
         {
             // 调用子类（如 InventoryView）实现的 InitializeView 方法，完成 UI 的动态构建
-            yield return StartCoroutine(InitializeView());
+            // yield return StartCoroutine(InitializeView());
+            yield return null;
 
             // 为全局的幽灵图标注册鼠标移动和抬起的事件监听
             ghostIcon.RegisterCallback<PointerMoveEvent>(OnPointerMove);
@@ -42,7 +43,7 @@ namespace Systems.Inventory
         }
 
         // 抽象方法：强制子类（如 InventoryView）必须实现具体的 UI 初始化与层级构建逻辑
-        public abstract IEnumerator InitializeView(int size = 20);
+        public abstract IEnumerator InitializeView(ViewModel viewModel);
 
         // 处理拖拽开始（由 Slot 的 OnPointerDown 事件触发）
         private static void OnPointerDown(Vector2 position, Slot slot)

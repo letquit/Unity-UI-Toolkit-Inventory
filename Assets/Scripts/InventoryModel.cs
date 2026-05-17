@@ -7,6 +7,7 @@ namespace Systems.Inventory
     {
         // 只读属性：对外暴露底层的可观察数组，供外界读取物品数据
         public ObservableArray<Item> Items { get; set; }
+        public int Coins { get; set; }
 
         // 事件转发器：将底层 ObservableArray 的数据变化事件，优雅地转发给外界（比如 Controller）
         public event Action<Item[]> OnModelChanged

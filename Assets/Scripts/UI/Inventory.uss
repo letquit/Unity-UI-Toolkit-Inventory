@@ -93,3 +93,17 @@ Label {
     height: 60px;
     background-image: none;
 }
+
+.coins {
+    flex-grow: 1;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: flex-start;
+}
+
+.coinsIcon {
+    width: 40px;
+    height: 40px;
+    margin: 4px;
+    background-image: url('/Assets/Art/coin.png');
+}

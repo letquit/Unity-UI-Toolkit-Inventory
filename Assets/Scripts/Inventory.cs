@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Systems.Inventory
@@ -26,6 +27,13 @@ namespace Systems.Inventory
                 .WithStartingItems(startingItems) // 链式调用：传入开局物品
                 .WithCapacity(capacity) // 链式调用：传入背包容量
                 .Build(); // 最终构建出配置好的 InventoryController 实例
+        }
+
+        // Update 是 Unity 的帧更新方法，每渲染一帧都会调用一次
+        private void Update()
+        {
+            // 每帧调用一次增加金币的方法（用于测试金币增加逻辑是否正常）
+            controller.AddCoins(1);
         }
     }
 }

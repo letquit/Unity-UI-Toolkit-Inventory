@@ -4,6 +4,22 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace Systems.Inventory {
+    // 新增的 ViewModel 类：作为 View（视图）和 Model（数据）之间的“翻译官”和“中间人”
+    public class ViewModel
+    {
+        public readonly int Capacity; // 暴露背包容量给 View 层
+        // 暴露一个可绑定的金币字符串属性。View 层只需要监听它，它一变，UI 就自动更新
+        public readonly BindableProperty<string> Coins;
+
+        public ViewModel(InventoryModel model, int capacity)
+        {
+            Capacity = capacity;
+            // 核心逻辑：将 ViewModel 的 Coins 属性，与 Model 层的 model.Coins 数据进行绑定
+            // 只要 model.Coins 发生变化，这个 BindableProperty 就会自动通知 View 刷新
+            Coins = BindableProperty<string>.Bind(() => model.Coins.ToString());
+        }
+    }
+
     public class InventoryController {
         // 只读字段：确保在控制器创建后，视图、模型和容量不能被外部篡改
         private readonly InventoryView view;
@@ -24,10 +40,14 @@ namespace Systems.Inventory {
             view.StartCoroutine(Initialize());
         }
         
+        // 对外暴露的增加金币的公共方法（业务逻辑入口）
+        public void AddCoins(int amount) => model.Coins += amount;
+        
         // 初始化协程：负责绑定事件和首次刷新界面
         private IEnumerator Initialize() {
-            // yield return view.InitializeView(capacity); // 预留了等待视图完全初始化的接口
-            yield return null; // 等待一帧，确保 UI 元素已经生成完毕
+            // 架构升级点：将新创建的 ViewModel 实例传递给 View 进行初始化
+            yield return view.InitializeView(new ViewModel(model, capacity));
+            // yield return null; // 等待一帧，确保 UI 元素已经生成完毕
 
             // 核心逻辑：订阅 View 和 Model 的事件，实现双向绑定
             view.OnDrop += HandleDrop; // 监听 UI 的拖拽掉落事件
