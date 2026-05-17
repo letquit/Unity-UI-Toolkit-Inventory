@@ -39,6 +39,9 @@ namespace Systems.Inventory {
             // 启动一个协程来异步初始化系统（等待视图准备就绪）
             view.StartCoroutine(Initialize());
         }
+
+        // 接入存档系统的核心方法：将存档数据注入底层的 Model
+        public void Bind(InventoryData data) => model.Bind(data);
         
         // 对外暴露的增加金币的公共方法（业务逻辑入口）
         public void AddCoins(int amount) => model.Coins += amount;
@@ -47,7 +50,7 @@ namespace Systems.Inventory {
         private IEnumerator Initialize() {
             // 架构升级点：将新创建的 ViewModel 实例传递给 View 进行初始化
             yield return view.InitializeView(new ViewModel(model, capacity));
-            // yield return null; // 等待一帧，确保 UI 元素已经生成完毕
+            yield return null; // 等待一帧，确保 UI 元素已经生成完毕
 
             // 核心逻辑：订阅 View 和 Model 的事件，实现双向绑定
             view.OnDrop += HandleDrop; // 监听 UI 的拖拽掉落事件
@@ -90,11 +93,9 @@ namespace Systems.Inventory {
         private void RefreshView() {
             for (int i = 0; i < capacity; i++) {
                 var item = model.Get(i);
-                if (item == null) {
-                    // 如果该位置没有物品，将 UI 格子重置为空状态
+                if (item == null || item.details == null) {
                     view.Slots[i].Set(SerializableGuid.Empty, null);
                 } else {
-                    // 如果有物品，将物品的 ID、图标和数量同步给 UI 格子
                     view.Slots[i].Set(item.Id, item.details.Icon, item.quantity);
                 }
             }

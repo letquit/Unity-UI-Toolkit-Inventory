@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 namespace Systems.Inventory
 {
@@ -19,7 +20,7 @@ namespace Systems.Inventory
     [Serializable] // 加上此特性，使得该数组可以在 Unity 的 Inspector 面板中序列化显示
     public class ObservableArray<T> : IObservableArray<T>
     {
-        private T[] items; // 内部实际存储数据的原生数组
+        [HideInInspector] public T[] items; // 内部实际存储数据的原生数组
 
         // 初始化一个空的委托，防止外界订阅前触发事件导致空引用异常（NullReferenceException）
         public event Action<T[]> AnyValueChanged = delegate { };

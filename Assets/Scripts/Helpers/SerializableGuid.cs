@@ -3,81 +3,120 @@ using UnityEngine;
 
 namespace Systems.Inventory
 {
-    /// <summary>
-    /// 表示一个全局唯一标识符 (GUID)，它支持 Unity 序列化，并且可以在游戏脚本中正常使用。
-    /// </summary>
-    [Serializable] // 关键特性：让 Unity 的序列化系统能够识别并保存这个结构体
+    // 加上 [Serializable] 特性，让 Unity 的序列化系统能够识别并保存这个结构体
+    [Serializable]
     public struct SerializableGuid : IEquatable<SerializableGuid>
     {
-        // 将 128 位的 GUID 拆分成 4 个 32 位的无符号整数（uint）
-        // SerializeField 确保它们能被 Unity 序列化，HideInInspector 避免在 Inspector 中直接显示这 4 个枯燥的数字
+        // 将 128 位的 Guid 拆分成 4 个 32 位的 uint（无符号整数）。
+        // [SerializeField] 让私有字段能在 Inspector 中显示，[HideInInspector] 将其隐藏（保持面板整洁）。
+        // 这样既保证了数据能被 Unity 完美序列化，又不会在编辑器里显得杂乱。
         [SerializeField, HideInInspector] public uint Part1;
         [SerializeField, HideInInspector] public uint Part2;
         [SerializeField, HideInInspector] public uint Part3;
         [SerializeField, HideInInspector] public uint Part4;
 
-        // 提供一个全零的空 GUID 静态实例，类似于 System.Guid.Empty
+        // 提供一个全零的空值，常用于表示“无物品”或“未初始化”状态
         public static SerializableGuid Empty => new(0, 0, 0, 0);
 
-        // 构造函数：接收 4 个 uint 并组装成一个完整的 SerializableGuid
-        public SerializableGuid(uint val0, uint val1, uint val2, uint val3)
+        // 构造函数：手动指定 4 个部分的值
+        public SerializableGuid(uint p1, uint p2, uint p3, uint p4)
         {
-            Part1 = val0;
-            Part2 = val1;
-            Part3 = val2;
-            Part4 = val3;
+            Part1 = p1;
+            Part2 = p2;
+            Part3 = p3;
+            Part4 = p4;
         }
 
-        // 静态方法：调用 C# 原生的 Guid.NewGuid() 生成一个全新的 GUID，并通过你写的扩展方法转换成 SerializableGuid
-        public static SerializableGuid NewGuid() => Guid.NewGuid().ToSerializableGuid();
-
-        // 静态方法：从一个 32 位的十六进制字符串（如 "A1B2C3D4..."）还原出 SerializableGuid
-        public static SerializableGuid FromHexString(string hexString)
+        // 生成一个新的全局唯一标识符
+        public static SerializableGuid NewGuid()
         {
-            // 安全检查：标准的 GUID 字符串长度必须是 32 位
-            if (hexString.Length != 32)
-            {
-                return Empty;
-            }
+            return FromGuid(Guid.NewGuid());
+        }
 
-            // 将字符串按每 8 位一段切分，并转换回 uint（16 代表按十六进制解析）
-            return new SerializableGuid
-            (
-                Convert.ToUInt32(hexString.Substring(0, 8), 16),
-                Convert.ToUInt32(hexString.Substring(8, 8), 16),
-                Convert.ToUInt32(hexString.Substring(16, 8), 16),
-                Convert.ToUInt32(hexString.Substring(24, 8), 16)
+        // 将 C# 原生的 System.Guid 转换为我们自定义的 SerializableGuid
+        public static SerializableGuid FromGuid(Guid guid)
+        {
+            var bytes = guid.ToByteArray(); // 获取原生 Guid 的 16 字节数组
+            // 将 16 字节拆分为 4 个 uint 并赋值
+            return new SerializableGuid(
+                BitConverter.ToUInt32(bytes, 0),
+                BitConverter.ToUInt32(bytes, 4),
+                BitConverter.ToUInt32(bytes, 8),
+                BitConverter.ToUInt32(bytes, 12)
             );
         }
 
-        // 实例方法：将当前的 SerializableGuid 转换回 32 位的十六进制字符串
-        // :X8 格式化符确保每个 uint 都输出为 8 位大写十六进制数，不足的前面补零
+        // 将自定义的 SerializableGuid 转换回 C# 原生的 System.Guid
+        public Guid ToGuid()
+        {
+            var bytes = new byte[16];
+            Buffer.BlockCopy(BitConverter.GetBytes(Part1), 0, bytes, 0, 4);
+            Buffer.BlockCopy(BitConverter.GetBytes(Part2), 0, bytes, 4, 4);
+            Buffer.BlockCopy(BitConverter.GetBytes(Part3), 0, bytes, 8, 4);
+            Buffer.BlockCopy(BitConverter.GetBytes(Part4), 0, bytes, 12, 4);
+            return new Guid(bytes);
+        }
+
+        // 重写 ToString，方便在 Debug 调试时直接看到标准的 Guid 字符串格式
+        public override string ToString()
+        {
+            return ToGuid().ToString();
+        }
+
+        // 从标准 Guid 字符串（如 "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"）解析出 SerializableGuid
+        public static SerializableGuid FromString(string value)
+        {
+            if (Guid.TryParse(value, out var guid))
+            {
+                return FromGuid(guid);
+            }
+            return Empty;
+        }
+
+        // 从 32 位的纯十六进制字符串（无横杠）解析出 SerializableGuid
+        public static SerializableGuid FromHexString(string hex)
+        {
+            if (hex.Length != 32) return Empty;
+            return new SerializableGuid(
+                Convert.ToUInt32(hex.Substring(0, 8), 16),
+                Convert.ToUInt32(hex.Substring(8, 8), 16),
+                Convert.ToUInt32(hex.Substring(16, 8), 16),
+                Convert.ToUInt32(hex.Substring(24, 8), 16)
+            );
+        }
+
+        // 将当前的 Guid 转换为 32 位的纯十六进制字符串
         public string ToHexString()
         {
             return $"{Part1:X8}{Part2:X8}{Part3:X8}{Part4:X8}";
         }
 
-        // 重写 object 的 Equals 方法，确保在作为 Dictionary 的 Key 或调用 object.Equals 时能正确比较
-        public override bool Equals(object obj)
-        {
-            return obj is SerializableGuid guid && this.Equals(guid);
-        }
-
-        // 实现 IEquatable 接口的强类型 Equals 方法，提供最高效的相等性比较
+        // 实现 IEquatable 接口的强类型 Equals 方法，用于高性能的值比较
         public bool Equals(SerializableGuid other)
         {
-            // 只有当 4 个部分完全相等时，两个 GUID 才被视为相等
-            return Part1 == other.Part1 && Part2 == other.Part2 && Part3 == other.Part3 && Part4 == other.Part4;
+            return Part1 == other.Part1 && Part2 == other.Part2 &&
+                   Part3 == other.Part3 && Part4 == other.Part4;
         }
 
-        // 重写 GetHashCode，确保在使用 Dictionary 或 HashSet 等哈希集合时，相同的 GUID 能映射到相同的哈希桶
+        // 重写基类的 Equals 方法，确保与其他 object 比较时的逻辑一致
+        public override bool Equals(object obj)
+        {
+            return obj is SerializableGuid other && Equals(other);
+        }
+
+        // 重写 GetHashCode，确保在 Dictionary 或 HashSet 中作为键值时的哈希计算正确
         public override int GetHashCode()
         {
             return HashCode.Combine(Part1, Part2, Part3, Part4);
         }
 
-        // 重载 == 和 != 运算符，让你在代码中可以直接用 if (guid1 == guid2) 这样的语法进行直观比较
+        // 重载 == 和 != 运算符，让代码中可以直接使用 if (guid1 == guid2) 这样的直观写法
         public static bool operator ==(SerializableGuid left, SerializableGuid right) => left.Equals(right);
-        public static bool operator !=(SerializableGuid left, SerializableGuid right) => !(left == right);
+        public static bool operator !=(SerializableGuid left, SerializableGuid right) => !left.Equals(right);
+
+        // 隐式转换：允许直接将 SerializableGuid 赋值给 string 变量（自动调用 ToString）
+        public static implicit operator string(SerializableGuid guid) => guid.ToString();
+        // 显式转换：允许通过 (SerializableGuid)"xxx-xxx..." 的强制转换语法将字符串转回 Guid
+        public static explicit operator SerializableGuid(string value) => FromString(value);
     }
 }

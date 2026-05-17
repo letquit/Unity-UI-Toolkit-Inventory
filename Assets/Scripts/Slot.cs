@@ -7,6 +7,10 @@ namespace Systems.Inventory
     // 继承 VisualElement，让 Slot 成为一个可以被 UIElements 系统识别和渲染的自定义 UI 控件
     public class Slot : VisualElement
     {
+        // UxmlFactory：UI Toolkit 的“出生证明”。
+        // 有了它，你才能在 UXML 文件中直接使用 <Slot /> 标签，或者在 C# 中通过 UXML 实例化它。
+        public new class UxmlFactory : UxmlFactory<Slot, UxmlTraits> { }
+        
         public Image Icon; // 用于显示物品图标的 Image 控件
 
         public Label StackLabel; // 用于显示物品堆叠数量的 Label 控件
