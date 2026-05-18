@@ -15,17 +15,12 @@ EditorBuildSettings:
     path: Assets/Scenes/Cinematics.unity
     guid: 457fe9f54f2173c429f85b95d151132b
   - enabled: 1
-    path: Assets/Scenes/Gameplay.unity
-    guid: c35b2a0f779f9d6428037683ab4f0111
-  - enabled: 1
-    path: Assets/Scenes/Scene_Mountain.unity
-    guid: ac96041c59d541944940583733fcdfd0
-  - enabled: 1
     path: Assets/Scenes/TimeFlow.unity
     guid: dc8f1414df682fe4a9e333d51c9bd4e4
   - enabled: 1
     path: Assets/Scenes/UI.unity
     guid: d6f08199608c23448b0e756e5c4fa4f1
   m_configObjects:
+    com.unity.addressableassets: {fileID: 11400000, guid: 6aff6e21bf1313f4992ef982a293bd25, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0
